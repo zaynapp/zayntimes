@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WatchFace Studio</title>
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #111111;
+      --bg-card: #1a1a1a;
+      --bg-card-hover: #222222;
+      --red: #E50914;
+      --red-hover: #b20710;
+      --white: #f5f5f7;
+      --gray: #86868b;
+      --gray-light: #a1a1a6;
+      --border: #2a2a2a;
+      --text-muted: #6e6e73;
+      --shadow: 0 8px 30px rgba(0,0,0,0.6);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: var(--bg-primary);
+      color: var(--white);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ─── Navigation ─── */
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
+      background: rgba(10,10,10,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .logo span {
+      color: var(--red);
+    }
+    .logo .light {
+      color: var(--white);
+      font-weight: 300;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--gray-light);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--white);
+    }
+
+    .nav-links a.active {
+      position: relative;
+    }
+    .nav-links a.active::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--red);
+      border-radius: 1px;
+    }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 4px;
+    }
+    .hamburger span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--white);
+      border-radius: 2px;
+      transition: 0.3s;
+    }
+
+    /* ─── Sections ─── */
+    .section {
+      display: none;
+      padding-top: 60px;
+      min-height: 100vh;
+    }
+    .section.active {
+      display: block;
+    }
+
+    /* ─── Hero ─── */
+    .hero {
+      text-align: center;
+      padding: 100px 24px 60px;
+      background: linear-gradient(180deg, #0a0a0a 0%, #111 50%, #0a0a0a 100%);
+    }
+
+    .hero h1 {
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 700;
+      letter-spacing: -1.5px;
+      margin-bottom: 16px;
+    }
+    .hero h1 span { color: var(--red); }
+    .hero p {
+      color: var(--gray);
+      font-size: clamp(16px, 2vw, 20px);
+      max-width: 640px;
+      margin: 0 auto 32px;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: rgba(229,9,20,0.12);
+      color: var(--red);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(229,9,20,0.25);
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      margin-top: 40px;
+    }
+    .hero-stats div {
+      text-align: center;
+    }
+    .hero-stats .num {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--white);
+    }
+    .hero-stats .label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ─── Watch Face Grid ─── */
+    .collection {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 60px 24px;
+    }
+
+    .collection-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .collection-header h2 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .collection-header .count {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .watch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 24px;
+    }
+
+    .watch-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.35s cubic-bezier(0.25,0.1,0.25,1), box-shadow 0.35s ease, background 0.3s;
+      border: 1px solid var(--border);
+      position: relative;
+    }
+    .watch-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 20px 50px rgba(229,9,20,0.15);
+      background: var(--bg-card-hover);
+      border-color: rgba(229,9,20,0.3);
+    }
+
+    .watch-card .thumb {
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      background: radial-gradient(circle at 30% 30%, #1a1a1a, #0d0d0d);
+      position: relative;
+    }
+
+    .watch-card .thumb svg {
+      width: 100%;
+      height: 100%;
+      max-width: 180px;
+      filter: drop-shadow(0 4px 20px rgba(0,0,0,0.5));
+      transition: transform 0.4s;
+    }
+    .watch-card:hover .thumb svg {
+      transform: scale(1.06);
+    }
+
+    .watch-card .info {
+      padding: 16px 20px 20px;
+    }
+    .watch-card .info h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .watch-card .info p {
+      font-size: 13px;
+      color: var(--gray);
+    }
+
+    .watch-card .play-badge {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(6px);
+      border-radius: 8px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gray-light);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .watch-card:hover .play-badge {
+      opacity: 1;
+    }
+
+    .watch-card .play-badge svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* ─── Contact ─── */
+    .contact-wrap {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 100px 24px 60px;
+    }
+
+    .contact-wrap h2 {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+    .contact-wrap .sub {
+      color: var(--gray);
+      margin-bottom: 40px;
+    }
+
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .contact-form .row {
+      display: flex;
+      gap: 16px;
+    }
+    .contact-form .row > * { flex: 1; }
+
+    .contact-form label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-light);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .contact-form input,
+    .contact-form textarea {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--white);
+      font-size: 15px;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .contact-form input:focus,
+    .contact-form textarea:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(229,9,20,0.15);
+    }
+    .contact-form textarea {
+      min-height: 130px;
+      resize: vertical;
+    }
+
+    .contact-form button {
+      align-self: flex-start;
+      padding: 12px 36px;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .contact-form button:hover {
+      background: var(--red-hover);
+      transform: scale(1.02);
+    }
+
+    .contact-alt {
+      margin-top: 32px;
+      padding: 20px 0;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+    .contact-alt a {
+      color: var(--gray-light);
+      text-decoration: none;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: color 0.2s;
+    }
+    .contact-alt a:hover { color: var(--white); }
+
+    /* ─── Privacy Policy ─── */
+    .privacy-wrap {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 100px 24px 60px;
+    }
+
+    .privacy-wrap h2 {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+    .privacy-wrap .date {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 40px;
+    }
+
+    .privacy-wrap h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-top: 36px;
+      margin-bottom: 12px;
+    }
+
+    .privacy-wrap p {
+      color: var(--gray);
+      font-size: 15px;
+      margin-bottom: 16px;
+      line-height: 1.7;
+    }
+
+    .privacy-wrap ul {
+      color: var(--gray);
+      font-size: 15px;
+      padding-left: 20px;
+      margin-bottom: 16px;
+    }
+    .privacy-wrap ul li { margin-bottom: 6px; }
+
+    /* ─── Footer ─── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 24px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    footer a {
+      color: var(--gray-light);
+      text-decoration: none;
+    }
+    footer a:hover { color: var(--white); }
+
+    /* ─── Toast ─── */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 14px;
+      color: var(--white);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transition: opacity 0.35s, transform 0.35s;
+      pointer-events: none;
+      z-index: 2000;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 60px;
+        left: 0;
+        right: 0;
+        background: rgba(10,10,10,0.98);
+        backdrop-filter: blur(20px);
+        flex-direction: column;
+        padding: 16px 24px;
+        gap: 16px;
+        border-bottom: 1px solid var(--border);
+      }
+      .nav-links.open { display: flex; }
+      .hamburger { display: flex; }
+
+      .hero-stats { gap: 24px; }
+      .hero-stats .num { font-size: 22px; }
+
+      .watch-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+
+      .contact-form .row { flex-direction: column; }
+      .contact-wrap { padding-top: 80px; }
+      .privacy-wrap { padding-top: 80px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Navigation ─── -->
+  <nav>
+    <div class="nav-inner">
+      <div class="logo"><span>Watch</span><span class="light">Face</span></div>
+      <ul class="nav-links" id="navLinks">
+        <li><a class="active" data-page="home">Home</a></li>
+        <li><a data-page="contact">Contact</a></li>
+        <li><a data-page="privacy">Privacy Policy</a></li>
+      </ul>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ─── HOME ─── -->
+  <section class="section active" id="page-home">
+    <div class="hero">
+      <div class="hero-badge">&#9679; Premium Watch Faces</div>
+      <h1>Designed for your <span>wrist</span></h1>
+      <p>Bold, minimal, expressive — each face is crafted to make every glance a moment of delight.</p>
+      <div class="hero-stats">
+        <div><div class="num">12</div><div class="label">Watch Faces</div></div>
+        <div><div class="num">5K+</div><div class="label">Downloads</div></div>
+        <div><div class="num">4.8</div><div class="label">Avg. Rating</div></div>
+      </div>
+    </div>
+
+    <div class="collection">
+      <div class="collection-header">
+        <h2>Collection</h2>
+        <span class="count" id="faceCount"></span>
+      </div>
+      <div class="watch-grid" id="watchGrid"></div>
+    </div>
+  </section>
+
+  <!-- ─── CONTACT ─── -->
+  <section class="section" id="page-contact">
+    <div class="contact-wrap">
+      <h2>Get in touch</h2>
+      <p class="sub">Have a question, feedback, or just want to say hi? Drop us a message.</p>
+
+      <form class="contact-form" id="contactForm">
+        <div class="row">
+          <div>
+            <label for="name">Name</label>
+            <input type="text" id="name" placeholder="Your name" required>
+          </div>
+          <div>
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="you@example.com" required>
+          </div>
+        </div>
+        <div>
+          <label for="subject">Subject</label>
+          <input type="text" id="subject" placeholder="What's this about?">
+        </div>
+        <div>
+          <label for="message">Message</label>
+          <textarea id="message" placeholder="Write your message here…" required></textarea>
+        </div>
+        <button type="submit">Send Message</button>
+      </form>
+
+      <div class="contact-alt">
+        <a href="mailto:hello@watchfacestudio.com">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          hello@watchfacestudio.com
+        </a>
+        <a href="#">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+          @watchfacestudio
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── PRIVACY POLICY ─── -->
+  <section class="section" id="page-privacy">
+    <div class="privacy-wrap">
+      <h2>Privacy Policy</h2>
+      <p class="date">Last updated: May 25, 2026</p>
+
+      <p>WatchFace Studio ("we", "our", "us") respects your privacy. This policy explains how we collect, use, and protect your information.</p>
+
+      <h3>Information We Collect</h3>
+      <ul>
+        <li><strong>Contact information</strong> — name and email address, only when you voluntarily submit our contact form.</li>
+        <li><strong>Usage data</strong> — anonymous analytics such as page views and interactions to improve our service.</li>
+        <li><strong>Cookies</strong> — we use minimal cookies for essential site functionality.</li>
+      </ul>
+
+      <h3>How We Use Your Data</h3>
+      <p>We use your data solely to respond to inquiries, improve our website, and deliver a better experience. We never sell your personal information to third parties.</p>
+
+      <h3>Google Play Links</h3>
+      <p>When you click a watch face, you are redirected to Google Play. Your interaction with Google Play is governed by Google's own privacy policy. We are not responsible for their practices.</p>
+
+      <h3>Data Security</h3>
+      <p>We implement industry-standard security measures to protect your data. However, no online service is 100% secure. We encourage you to use strong passwords and keep your software updated.</p>
+
+      <h3>Your Rights</h3>
+      <p>You may request access, correction, or deletion of your data at any time by contacting us. You may also opt out of analytics via your browser settings.</p>
+
+      <h3>Contact</h3>
+      <p>For privacy-related inquiries, reach us at <a href="mailto:hello@watchfacestudio.com" style="color:#E50914;">hello@watchfacestudio.com</a>.</p>
+    </div>
+  </section>
+
+  <!-- ─── Footer ─── -->
+  <footer>
+    &copy; 2026 <a href="#">WatchFace Studio</a>. All rights reserved.
+  </footer>
+
+  <!-- ─── Toast ─── -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ─── Data ───
+    const watchFaces = [
+      { name: 'Chrono Dark', desc: 'Built for speed & precision', color1: '#E50914', color2: '#ff2a2a', url: 'https://play.google.com/store/apps/details?id=com.watchface.chrono' },
+      { name: 'Neo Pulse', desc: 'Cyberpunk meets minimalism', color1: '#00f0ff', color2: '#7b2ff7', url: 'https://play.google.com/store/apps/details?id=com.watchface.neopulse' },
+      { name: 'Lunar Eclipse', desc: 'Elegance in every phase', color1: '#f5f5f7', color2: '#8e8e93', url: 'https://play.google.com/store/apps/details?id=com.watchface.lunar' },
+      { name: 'Carbon Fiber', desc: 'Tough, tactical, refined', color1: '#555', color2: '#222', url: 'https://play.google.com/store/apps/details?id=com.watchface.carbon' },
+      { name: 'Aqua Deep', desc: 'Dive into sapphire depths', color1: '#007aff', color2: '#0040ff', url: 'https://play.google.com/store/apps/details?id=com.watchface.aqua' },
+      { name: 'Retro Digital', desc: 'Classic LCD, modern heart', color1: '#39ff14', color2: '#0a0a0a', url: 'https://play.google.com/store/apps/details?id=com.watchface.retro' },
+      { name: 'Rose Gold', desc: 'Delicate, warm, timeless', color1: '#ffb6c1', color2: '#e8a0b0', url: 'https://play.google.com/store/apps/details?id=com.watchface.rose' },
+      { name: 'Titanium Edge', desc: 'Sleek, strong, premium', color1: '#8a8a8f', color2: '#555', url: 'https://play.google.com/store/apps/details?id=com.watchface.titanium' },
+      { name: 'Galaxy Fold', desc: 'Infinite display, infinite style', color1: '#a855f7', color2: '#3b0764', url: 'https://play.google.com/store/apps/details?id=com.watchface.galaxy' },
+      { name: 'Stealth Ops', desc: 'Dark mode perfected', color1: '#1a1a1a', color2: '#000', url: 'https://play.google.com/store/apps/details?id=com.watchface.stealth' },
+      { name: 'Sunset Glow', desc: 'Golden hour, always', color1: '#f97316', color2: '#dc2626', url: 'https://play.google.com/store/apps/details?id=com.watchface.sunset' },
+      { name: 'Minimal White', desc: 'Less is more', color1: '#f5f5f7', color2: '#e5e5ea', url: 'https://play.google.com/store/apps/details?id=com.watchface.minimal' },
+    ];
+
+    const grid = document.getElementById('watchGrid');
+    const count = document.getElementById('faceCount');
+
+    function renderWatchFaces() {
+      grid.innerHTML = watchFaces.map((wf, i) => {
+        const d = `M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z`;
+        return `
+          <div class="watch-card" data-url="${wf.url}">
+            <div class="thumb">
+              <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="48" fill="none" stroke="${wf.color1}" stroke-width="2.5" opacity="0.3"/>
+                <circle cx="50" cy="50" r="44" fill="none" stroke="${wf.color1}" stroke-width="1.5" opacity="0.6"/>
+                <circle cx="50" cy="50" r="38" fill="none" stroke="${wf.color2}" stroke-width="5" opacity="0.15"/>
+                <circle cx="50" cy="50" r="3" fill="${wf.color1}"/>
+                <!-- hour markers -->
+                ${[0,30,60,90,120,150,180,210,240,270,300,330].map(deg => {
+                  const rad = deg * Math.PI / 180;
+                  const x1 = 50 + 34 * Math.sin(rad);
+                  const y1 = 50 - 34 * Math.cos(rad);
+                  const x2 = 50 + 38 * Math.sin(rad);
+                  const y2 = 50 - 38 * Math.cos(rad);
+                  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${deg % 90 === 0 ? wf.color1 : wf.color2}" stroke-width="${deg % 90 === 0 ? 2.5 : 1.2}" stroke-linecap="round"/>`;
+                }).join('')}
+                <!-- hour hand -->
+                <line x1="50" y1="50" x2="50" y2="26" stroke="${wf.color1}" stroke-width="3.5" stroke-linecap="round"/>
+                <!-- minute hand -->
+                <line x1="50" y1="50" x2="68" y2="50" stroke="${wf.color2}" stroke-width="2.5" stroke-linecap="round"/>
+                <!-- center dot -->
+                <circle cx="50" cy="50" r="3.5" fill="${wf.color1}"/>
+                <circle cx="50" cy="50" r="1.5" fill="${wf.color1 === '#f5f5f7' ? '#000' : '#f5f5f7'}"/>
+              </svg>
+              <div class="play-badge">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 2v20l18-10z"/></svg>
+                Google Play
+              </div>
+            </div>
+            <div class="info">
+              <h3>${wf.name}</h3>
+              <p>${wf.desc}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+      count.textContent = `${watchFaces.length} faces`;
+    }
+
+    renderWatchFaces();
+
+    // Click watch-card -> open Google Play
+    grid.addEventListener('click', e => {
+      const card = e.target.closest('.watch-card');
+      if (!card) return;
+      const url = card.dataset.url;
+      if (url) window.open(url, '_blank');
+    });
+
+    // ─── Navigation ───
+    const navLinks = document.querySelectorAll('[data-page]');
+    const sections = {
+      home: document.getElementById('page-home'),
+      contact: document.getElementById('page-contact'),
+      privacy: document.getElementById('page-privacy'),
+    };
+
+    navLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        const page = link.dataset.page;
+        // update nav active
+        navLinks.forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+        // show section
+        Object.entries(sections).forEach(([key, el]) => {
+          el.classList.toggle('active', key === page);
+        });
+        // close mobile menu
+        document.getElementById('navLinks').classList.remove('open');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+
+    // ─── Hamburger ───
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('open');
+    });
+
+    // ─── Contact Form ───
+    document.getElementById('contactForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const toast = document.getElementById('toast');
+      toast.textContent = 'Thanks for reaching out! We\'ll get back to you soon.';
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3500);
+      e.target.reset();
+    });
+
+    // ─── Close mobile menu on outside click ───
+    document.addEventListener('click', e => {
+      const nav = document.querySelector('nav');
+      const menu = document.getElementById('navLinks');
+      if (menu.classList.contains('open') && !nav.contains(e.target)) {
+        menu.classList.remove('open');
+      }
+    });
+  </script>
+</body>
+</html>
